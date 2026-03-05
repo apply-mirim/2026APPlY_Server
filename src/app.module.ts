@@ -3,6 +3,10 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HealthController } from './health/health.controller';
+import { AuthModule } from './auth/auth.module';
+import { ApplyModule } from './apply/apply.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { QnaModule } from './qna/qna.module';
 
 @Module({
   imports: [
@@ -24,6 +28,10 @@ import { HealthController } from './health/health.controller';
           configService.get<string>('DB_SYNCHRONIZE', 'false') === 'true',
       }),
     }),
+    AuthModule,
+    ApplyModule,
+    QnaModule,
+    AnalyticsModule,
   ],
   controllers: [HealthController],
   providers: [TransformInterceptor],

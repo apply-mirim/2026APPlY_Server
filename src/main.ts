@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import * as cookieParser from 'cookie-parser';
 import { Server } from 'socket.io';
 import { AppModule } from './app.module';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -162,6 +163,14 @@ function initializeCursorSocket(httpServer: unknown) {
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  const clientOrigin = process.env.CLIENT_ORIGIN ?? 'http://localhost:5173';
+  app.enableCors({
+    origin: clientOrigin.split(',').map((origin) => origin.trim()),
+    credentials: true,
+  });
+
+  app.use(cookieParser());
+
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(app.get(TransformInterceptor));
 
@@ -178,7 +187,9 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('APPlY API')
-    .setDescription('API documentation for APPlY server')
+    .setDescription(
+      'APPlY 서버 API 문서입니다. 관리자 보호 API는 Bearer 토큰 또는 HttpOnly 쿠키 기반 인증을 사용합니다.',
+    )
     .setVersion('1.0')
     .addServer('http://localhost:3000', 'Local')
     .addBearerAuth(
@@ -192,6 +203,10 @@ async function bootstrap() {
       },
       'JWT-auth',
     )
+    .addCookieAuth('admin_access_token', {
+      type: 'apiKey',
+      in: 'cookie',
+    })
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
